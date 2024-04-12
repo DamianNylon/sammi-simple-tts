@@ -1,0 +1,95 @@
+[extension_name]
+SammiTextToSpeechExtension
+
+[extension_info]
+Written by DamianNylon
+
+[extension_version]
+[insert_external]
+<style type="">
+  * {
+      box-sizing: border-box;
+    }
+</style>
+
+<div class="row">
+  <p>Simple TTS</p>
+</div>
+<div class="row">
+  <div class="column">
+    <img class="hue-img" src="https://i.imgur.com/PXr3Lez.png"></img>
+  </div>
+  <div class="column">
+    <p>Created by Hue, the Centipede Youkai</p> 
+    <a href="https://twitter.com/DamianDeNylon">Twitter</a>
+    <a href="https://github.com/HueVirtualCreature/Lioranboard2VTubeStudioExtension">GitHub</a>
+  </div>
+</div>
+
+[insert_command]
+SAMMI.extCommand("SimpleTTS - Speak", 3355443, 52, { 
+	Message: ['Message', 15, ""],
+	Voice:  ['Voice', 19, "default", null, speechSynthesis.getVoices().map(e => e.name)],
+	Pitch:  ['Pitch', 11, 25],
+	Rate:  ['Rate', 11, 10]
+})
+
+main();
+
+[insert_hook]
+
+[insert_script]
+
+function main(){
+    SAMMI.setVariable("TtsIsSpeaking", false);
+
+    sammiclient.on("SimpleTTS - Speak", (payload) => {
+        console.log("comando tts ejecutandose");
+        console.log(payload);
+
+        var data = payload.Data;
+
+        let voice = null;
+        if (!!data.Voice && data.Voice !== "default") {
+            //TODO Might be worth storing the voices somewhere instead of retrieving each time
+            voice = speechSynthesis.getVoices().find(e => e.name === data.Voice)
+        }
+        speakMessage(data.Message, voice, data.Pitch, data.Rate);
+    });
+}
+
+function postLBMessage(message, level = 1) {
+	const SIMPLETTS_PLUGINNAME = "SimpleTTS";
+	switch(level) {
+		case 0:
+			LB.notification(`${SIMPLETTS_PLUGINNAME} - ${message}`);
+			break;
+		case 1:
+			LB.alert(`${SIMPLETTS_PLUGINNAME} - ${message}`);
+			break;
+	}
+}
+
+function postConsoleMessage(message) {
+	const SIMPLETTS_PLUGINNAME = "SimpleTTS";
+	console.debug(`${SIMPLETTS_PLUGINNAME}: ${message}`);
+}
+
+function speakMessage(text, voice, pitch, rate) {
+    postLBMessage("Attempting to say: " + text);
+
+    SAMMI.setVariable("TtsIsSpeaking", true);
+    let synth = window.speechSynthesis;
+    const utterThis = new SpeechSynthesisUtterance(text);
+    utterThis.voice = voice;
+    utterThis.pitch = pitch * (2);
+    utterThis.rate = rate * (10);
+    utterThis.onend = (event) => {
+        postLBMessage("Finalizing speaking");
+        SAMMI.setVariable("TtsIsSpeaking", false);
+    }
+    synth.speak(utterThis);
+}
+
+postLBMessage(`Initializing...`);
+[insert_over]
